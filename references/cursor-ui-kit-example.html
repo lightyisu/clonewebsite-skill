@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f7f7f4">
+<title>Cursor UI Kit — 设计组件库</title>
+<style>
+/* ============================================================
+   Cursor UI Kit — 从 cursor.com 提取的设计语言
+   核心特征：纸感底色 / 墨色文字 / 胶囊按钮 / 0.8px 细边框 /
+            4px 小圆角卡片 / 400 字重大标题 / 等宽字体点缀
+   ============================================================ */
+
+:root {
+  /* —— 色彩系统（取自 cursor.com 的 --color-theme-* 变量）—— */
+  --color-theme-bg: #f7f7f4;                       /* 纸感底色 */
+  --color-theme-card-hex: #f2f1ed;                 /* 卡片面 */
+  --color-theme-card-01-hex: #f0efeb;              /* 卡片面 01 */
+  --color-theme-card-03-hex: #e6e5e0;              /* 次级按钮 / 滑块 */
+  --color-theme-text: #26251e;                     /* 墨色 */
+  --color-theme-text-sec: color-mix(in oklab, #26251e 60%, transparent);
+  --color-theme-text-mid: color-mix(in oklab, #26251e 50%, transparent);
+  --color-theme-text-tertiary: color-mix(in oklab, #26251e 40%, transparent);
+  --color-theme-border-01: color-mix(in oklab, #26251e 2.5%, transparent);
+  --color-theme-border-01-5: color-mix(in oklab, #26251e 5%, transparent);
+  --color-theme-border-02: color-mix(in oklab, #26251e 10%, transparent);
+  --color-theme-border-02-5: color-mix(in oklab, #26251e 20%, transparent);
+
+  --color-accent: #f54e00;                         /* Cursor 橙 */
+  --color-accent-bg: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  --color-accent-bg-strong: color-mix(in srgb, var(--color-accent) 25%, transparent);
+
+  /* 语义色调（取自 --viz-tone-*）*/
+  --tone-blue: #2268ff;
+  --tone-pink: #ec77bf;
+  --tone-green: #019f52;
+  --tone-red: #e05c7d;
+
+  /* —— 字体 —— */
+  --font-sans: "CursorGothic", system-ui, "Helvetica Neue", Helvetica, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+  --font-mono: "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --font-serif: "EB Garamond", Iowan Old Style, Palatino, Georgia, serif;
+
+  /* —— 圆角：按钮全胶囊，卡片仅 4px（官网真实做法）—— */
+  --radius-pill: 9999px;
+  --radius-card: 4px;
+
+  /* —— 边框：0.8px 细线 —— */
+  --border-hair: 0.8px;
+
+  /* —— 阴影（flyout）—— */
+  --shadow-flyout: 0 0 0 0.8px var(--color-theme-border-02),
+                   0 2px 6px rgba(0, 0, 0, 0.08),
+                   0 12px 32px rgba(0, 0, 0, 0.06);
+
+  /* —— 字号（官网实际渲染值）—— */
+  --type-display: 48px;   /* ls -1.2px */
+  --type-h2: 34px;        /* ls -0.68px */
+  --type-h3: 20.6px;      /* ls -0.1px */
+  --type-base: 15px;
+  --type-sm: 13.1px;      /* ls +0.13px 用于小标签 */
+  --type-mono: 13px;
+
+  --nav-h: 56px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--color-theme-bg);
+  color: var(--color-theme-text);
+  font-family: var(--font-sans);
+  font-size: var(--type-base);
+  font-weight: 400;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: var(--color-accent-bg-strong); }
+
+a { color: inherit; text-decoration: none; }
+
+/* ============ 导航栏（56px，同底色，flyout 卡片）============ */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  height: var(--nav-h);
+  background: var(--color-theme-bg);
+  border-bottom: var(--border-hair) solid var(--color-theme-border-01);
+  display: flex; align-items: center;
+  padding: 0 24px;
+  gap: 8px;
+}
+.nav__logo { display: flex; align-items: center; gap: 8px; font-size: var(--type-base); margin-right: 16px; }
+.nav__logo svg { display: block; }
+.nav__item { position: relative; }
+.nav__btn {
+  background: none; border: none; cursor: pointer;
+  font: inherit; font-size: var(--type-sm); color: var(--color-theme-text);
+  padding: 5.25px 14px;
+  border-radius: var(--radius-pill);
+  display: inline-flex; align-items: center; gap: 4px;
+  transition: background .15s;
+}
+.nav__btn:hover { background: var(--color-theme-border-01-5); }
+.nav__caret { font-size: 10px; color: var(--color-theme-text-tertiary); }
+.nav__spacer { flex: 1; }
+/* flyout 下拉卡片：radius 4px + flyout 阴影 */
+.flyout {
+  position: absolute; top: calc(100% + 8px); left: 0;
+  min-width: 180px;
+  background: var(--color-theme-card-hex);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-flyout);
+  padding: 8px;
+  opacity: 0; visibility: hidden; transform: translateY(-4px);
+  transition: opacity .15s, transform .15s, visibility .15s;
+}
+.nav__item:hover .flyout,
+.nav__item:focus-within .flyout { opacity: 1; visibility: visible; transform: translateY(0); }
+.flyout a {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 10px; border-radius: 3px;
+  font-size: var(--type-sm); color: var(--color-theme-text);
+}
+.flyout a:hover { background: var(--color-theme-border-01-5); }
+.flyout a .ext { color: var(--color-theme-text-tertiary); font-size: 12px; }
+.flyout__label {
+  padding: 6px 10px 2px; font-size: 11px;
+  color: var(--color-theme-text-tertiary); letter-spacing: 0.04em;
+}
+
+/* ============ 页面骨架 ============ */
+.container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+.hero { padding: 96px 0 64px; text-align: center; }
+.hero .eyebrow { margin-bottom: 20px; }
+.hero h1 {
+  font-size: clamp(32px, 5vw, var(--type-display));
+  font-weight: 400; letter-spacing: -0.025em; line-height: 1.18;
+  max-width: 720px; margin: 0 auto 12px;
+}
+.hero p { color: var(--color-theme-text-sec); max-width: 520px; margin: 0 auto 28px; }
+
+/* 小标签（官网 H2 标签样式：13px + 正字距）*/
+.eyebrow, .section-label {
+  font-size: var(--type-sm); letter-spacing: 0.01em;
+  color: var(--color-theme-text-sec); font-weight: 400;
+}
+.section-label { display: block; margin-bottom: 32px; }
+
+/* 章节标题 */
+.section { padding: 64px 0; border-top: var(--border-hair) solid var(--color-theme-border-01-5); }
+.section h2 {
+  font-size: var(--type-h2); font-weight: 400; letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+.section .section-desc { color: var(--color-theme-text-sec); margin-bottom: 40px; max-width: 560px; }
+
+/* 演示面板：卡片容器 */
+.demo-panel {
+  background: var(--color-theme-card-hex);
+  border-radius: var(--radius-card);
+  border: var(--border-hair) solid var(--color-theme-border-01-5);
+  padding: 32px;
+}
+.demo-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+.demo-row + .demo-row { margin-top: 20px; }
+.demo-row__label {
+  width: 100%; font-size: var(--type-sm); color: var(--color-theme-text-tertiary);
+  margin-bottom: -4px;
+}
+
+/* ============ 按钮：胶囊形 + 0.8px 边框 + 400 字重 ============ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font-family: inherit; font-size: var(--type-base); font-weight: 400;
+  border-radius: var(--radius-pill);
+  border: var(--border-hair) solid transparent;
+  padding: 13.35px 21.75px;   /* 官网 md 尺寸实际值 */
+  cursor: pointer; white-space: nowrap;
+  transition: background .15s, border-color .15s, opacity .15s, transform .1s;
+  text-decoration: none;
+}
+.btn:active { transform: scale(0.98); }
+.btn--sm { font-size: var(--type-sm); padding: 5.9px 10.5px; }
+
+.btn--primary { background: var(--color-theme-text); color: var(--color-theme-bg); border-color: var(--color-theme-text); }
+.btn--primary:hover { background: #3a3830; border-color: #3a3830; }
+
+.btn--secondary { background: var(--color-theme-card-03-hex); color: var(--color-theme-text); border-color: var(--color-theme-border-01); }
+.btn--secondary:hover { background: #dbdad4; }
+
+.btn--ghost { background: transparent; color: var(--color-theme-text); border-color: var(--color-theme-border-02-5); }
+.btn--ghost:hover { background: var(--color-theme-border-01-5); }
+
+.btn--accent { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
+.btn--accent:hover { background: #d94500; }
+
+.btn:disabled, .btn--disabled { opacity: 0.4; cursor: not-allowed; }
+.btn:disabled:active { transform: none; }
+
+.btn .arrow { font-size: 1.05em; line-height: 1; }
+
+/* ============ 徽章 / 状态点 ============ */
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: var(--border-hair) solid var(--color-theme-border-02);
+  color: var(--color-theme-text-sec);
+  background: transparent;
+}
+.badge--accent { color: var(--color-accent); border-color: color-mix(in srgb, var(--color-accent) 35%, transparent); background: var(--color-accent-bg); }
+.badge--green { color: var(--tone-green); border-color: color-mix(in srgb, var(--tone-green) 35%, transparent); background: color-mix(in srgb, var(--tone-green) 10%, transparent); }
+.badge--red { color: var(--tone-red); border-color: color-mix(in srgb, var(--tone-red) 35%, transparent); background: color-mix(in srgb, var(--tone-red) 10%, transparent); }
+.badge--blue { color: var(--tone-blue); border-color: color-mix(in srgb, var(--tone-blue) 35%, transparent); background: color-mix(in srgb, var(--tone-blue) 10%, transparent); }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* ============ 卡片 ============ */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.card {
+  background: var(--color-theme-card-hex);
+  border: var(--border-hair) solid var(--color-theme-border-01-5);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  transition: border-color .15s, transform .15s;
+}
+.card:hover { border-color: var(--color-theme-border-02-5); transform: translateY(-2px); }
+.card__icon {
+  width: 32px; height: 32px; border-radius: var(--radius-card);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--color-theme-border-01-5);
+  font-size: 14px; margin-bottom: 14px; color: var(--color-theme-text);
+}
+.card h3 { font-size: var(--type-base); font-weight: 400; margin-bottom: 6px; }
+.card p { font-size: var(--type-sm); color: var(--color-theme-text-sec); line-height: 1.5; }
+.card__link { display: inline-flex; align-items: center; gap: 4px; margin-top: 12px; font-size: var(--type-sm); color: var(--color-theme-text); }
+.card__link:hover { color: var(--color-accent); }
+
+/* ============ 分段控制器（定价页 月/年 切换）============ */
+.segmented {
+  display: inline-flex; padding: 1.875px;
+  background: var(--color-theme-card-hex);
+  border-radius: var(--radius-pill);
+  position: relative;
+  border: var(--border-hair) solid var(--color-theme-border-01-5);
+}
+.segmented button {
+  position: relative; z-index: 1;
+  font: inherit; font-size: var(--type-sm);
+  background: none; border: none; cursor: pointer;
+  padding: 6px 18px; border-radius: var(--radius-pill);
+  color: var(--color-theme-text-sec);
+  transition: color .15s;
+}
+.segmented button.active { color: var(--color-theme-text); }
+.segmented .thumb {
+  position: absolute; top: 1.875px; bottom: 1.875px;
+  background: var(--color-theme-card-03-hex);
+  border-radius: var(--radius-pill);
+  transition: left .2s cubic-bezier(.4,0,.2,1), width .2s cubic-bezier(.4,0,.2,1);
+}
+
+/* ============ 手风琴（FAQ 样式 ↓↑）============ */
+.accordion { border-top: var(--border-hair) solid var(--color-theme-border-01-5); }
+.accordion__item { border-bottom: var(--border-hair) solid var(--color-theme-border-01-5); }
+.accordion__head {
+  width: 100%; display: flex; justify-content: space-between; align-items: center;
+  background: none; border: none; cursor: pointer;
+  font: inherit; font-size: var(--type-base); color: var(--color-theme-text);
+  padding: 20px 4px; text-align: left;
+}
+.accordion__caret { color: var(--color-theme-text-tertiary); transition: transform .2s; font-size: 14px; }
+.accordion__item.open .accordion__caret { transform: rotate(180deg); }
+.accordion__body {
+  max-height: 0; overflow: hidden; transition: max-height .25s ease;
+}
+.accordion__body-inner {
+  padding: 0 4px 20px; font-size: var(--type-sm);
+  color: var(--color-theme-text-sec); max-width: 640px; line-height: 1.7;
+}
+
+/* ============ 输入框 ============ */
+.input-wrap { display: flex; flex-direction: column; gap: 6px; max-width: 360px; width: 100%; }
+.input-wrap label { font-size: var(--type-sm); color: var(--color-theme-text-sec); }
+.input, .select {
+  font: inherit; font-size: var(--type-sm);
+  background: var(--color-theme-bg);
+  border: var(--border-hair) solid var(--color-theme-border-02-5);
+  border-radius: var(--radius-card);
+  padding: 10px 14px; color: var(--color-theme-text);
+  outline: none; transition: border-color .15s, box-shadow .15s;
+  width: 100%;
+}
+.input::placeholder { color: var(--color-theme-text-tertiary); }
+.input:focus, .select:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-bg); }
+.input--pill { border-radius: var(--radius-pill); padding: 10px 18px; }
+.input--error { border-color: var(--tone-red); }
+.help-text { font-size: 12px; color: var(--color-theme-text-tertiary); }
+.help-text.error { color: var(--tone-red); }
+
+/* 搜索框（命令面板入口样式）*/
+.searchbar {
+  display: flex; align-items: center; gap: 10px;
+  max-width: 420px; width: 100%;
+  background: var(--color-theme-card-hex);
+  border: var(--border-hair) solid var(--color-theme-border-02-5);
+  border-radius: var(--radius-pill);
+  padding: 9px 16px; cursor: text;
+  color: var(--color-theme-text-tertiary); font-size: var(--type-sm);
+}
+.searchbar kbd {
+  margin-left: auto; font-family: var(--font-mono); font-size: 11px;
+  border: var(--border-hair) solid var(--color-theme-border-02);
+  border-radius: 3px; padding: 1px 5px; color: var(--color-theme-text-sec);
+}
+
+/* ============ 代码块 / 终端 ============ */
+.code-pill {
+  display: inline-flex; align-items: center; gap: 14px;
+  max-width: 100%;
+  background: var(--color-theme-card-hex);
+  border: var(--border-hair) solid var(--color-theme-border-02);
+  border-radius: var(--radius-pill);
+  padding: 11px 11px 11px 20px;
+  font-family: var(--font-mono); font-size: var(--type-mono);
+  color: var(--color-theme-text);
+}
+.code-pill .copy {
+  background: var(--color-theme-text); color: var(--color-theme-bg);
+  border: none; border-radius: var(--radius-pill);
+  font: inherit; font-size: 12px; padding: 4px 12px; cursor: pointer;
+  transition: opacity .15s;
+}
+.code-pill .copy:hover { opacity: 0.85; }
+
+.terminal {
+  background: var(--color-theme-text);
+  color: #d8d7d0;
+  border-radius: var(--radius-card);
+  font-family: var(--font-mono); font-size: var(--type-mono);
+  padding: 18px 20px; line-height: 1.8;
+  overflow-x: auto;
+}
+.terminal .t-dim { color: #8a887e; }
+.terminal .t-green { color: #4cc38a; }
+.terminal .t-orange { color: #ff8a4c; }
+.terminal .t-cursor { display: inline-block; width: 7px; height: 14px; background: #d8d7d0; vertical-align: text-bottom; animation: blink 1.1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ============ 表格 ============ */
+.table { width: 100%; border-collapse: collapse; font-size: var(--type-sm); }
+.table th {
+  text-align: left; font-weight: 400; color: var(--color-theme-text-tertiary);
+  padding: 10px 16px; border-bottom: var(--border-hair) solid var(--color-theme-border-02);
+  font-size: 12px; letter-spacing: 0.02em;
+}
+.table td { padding: 14px 16px; border-bottom: var(--border-hair) solid var(--color-theme-border-01-5); }
+.table tr:last-child td { border-bottom: none; }
+.table tbody tr { transition: background .1s; }
+.table tbody tr:hover { background: var(--color-theme-border-01-5); }
+.table .mono { font-family: var(--font-mono); font-size: 12px; color: var(--color-theme-text-sec); }
+
+/* ============ 开关 ============ */
+.switch { position: relative; width: 36px; height: 20px; display: inline-block; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch .track {
+  position: absolute; inset: 0; cursor: pointer;
+  background: var(--color-theme-card-03-hex);
+  border: var(--border-hair) solid var(--color-theme-border-02);
+  border-radius: var(--radius-pill); transition: background .2s, border-color .2s;
+}
+.switch .track::before {
+  content: ""; position: absolute; width: 14px; height: 14px;
+  left: 2px; top: 2px; border-radius: 50%;
+  background: var(--color-theme-bg); box-shadow: 0 1px 2px rgba(0,0,0,.15);
+  transition: transform .2s cubic-bezier(.4,0,.2,1);
+}
+.switch input:checked + .track { background: var(--color-theme-text); border-color: var(--color-theme-text); }
+.switch input:checked + .track::before { transform: translateX(16px); }
+
+.switch-row { display: flex; align-items: center; gap: 10px; font-size: var(--type-sm); }
+
+/* ============ 标签页（下划线式，docs 风格）============ */
+.tabs { display: flex; gap: 4px; border-bottom: var(--border-hair) solid var(--color-theme-border-01-5); }
+.tabs button {
+  font: inherit; font-size: var(--type-sm);
+  background: none; border: none; cursor: pointer;
+  color: var(--color-theme-text-sec);
+  padding: 10px 16px; position: relative;
+}
+.tabs button.active { color: var(--color-theme-text); }
+.tabs button.active::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -0.8px;
+  height: 1.6px; background: var(--color-theme-text);
+}
+
+/* ============ 通知 / Toast ============ */
+.toast {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--color-theme-card-hex);
+  border: var(--border-hair) solid var(--color-theme-border-02-5);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-flyout);
+  padding: 12px 16px; font-size: var(--type-sm); max-width: 380px;
+}
+.toast .icon { flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; }
+.toast--success .icon { background: var(--tone-green); }
+.toast--error .icon { background: var(--tone-red); }
+.toast__close { margin-left: auto; background: none; border: none; cursor: pointer; color: var(--color-theme-text-tertiary); font-size: 14px; padding: 2px; }
+
+/* ============ 色板展示 ============ */
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.swatch { border: var(--border-hair) solid var(--color-theme-border-01-5); border-radius: var(--radius-card); overflow: hidden; background: var(--color-theme-card-hex); }
+.swatch__chip { height: 64px; border-bottom: var(--border-hair) solid var(--color-theme-border-01-5); }
+.swatch__meta { padding: 10px 12px; }
+.swatch__name { font-size: 12px; color: var(--color-theme-text); }
+.swatch__value { font-family: var(--font-mono); font-size: 11px; color: var(--color-theme-text-tertiary); margin-top: 2px; }
+
+/* ============ 字体展示 ============ */
+.type-specimen { display: grid; gap: 4px; }
+.type-row {
+  display: grid; grid-template-columns: 220px 1fr; gap: 24px;
+  padding: 20px 0; border-bottom: var(--border-hair) solid var(--color-theme-border-01-5);
+  align-items: baseline;
+}
+.type-row:last-child { border-bottom: none; }
+.type-row__meta { font-family: var(--font-mono); font-size: 11px; color: var(--color-theme-text-tertiary); line-height: 1.8; }
+.type-sample { color: var(--color-theme-text); }
+.ts-display { font-size: var(--type-display); letter-spacing: -0.025em; font-weight: 400; line-height: 1.15; }
+.ts-h2 { font-size: var(--type-h2); letter-spacing: -0.02em; font-weight: 400; }
+.ts-h3 { font-size: var(--type-h3); letter-spacing: -0.005em; font-weight: 400; }
+.ts-base { font-size: var(--type-base); }
+.ts-label { font-size: var(--type-sm); letter-spacing: 0.01em; color: var(--color-theme-text-sec); }
+.ts-mono { font-family: var(--font-mono); font-size: var(--type-mono); }
+.ts-serif { font-family: var(--font-serif); font-size: 24px; font-style: italic; }
+
+/* ============ 页脚 ============ */
+.footer { border-top: var(--border-hair) solid var(--color-theme-border-01-5); margin-top: 64px; padding: 48px 0 64px; }
+.footer__grid { display: grid; grid-template-columns: 1.5fr repeat(3, 1fr); gap: 32px; }
+.footer h4 { font-size: var(--type-sm); font-weight: 400; color: var(--color-theme-text-tertiary); margin-bottom: 14px; }
+.footer ul { list-style: none; display: grid; gap: 8px; }
+.footer ul a { font-size: var(--type-sm); color: var(--color-theme-text-sec); }
+.footer ul a:hover { color: var(--color-theme-text); }
+.footer__brand p { font-size: var(--type-sm); color: var(--color-theme-text-tertiary); margin-top: 12px; max-width: 260px; }
+.footer__bottom {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 48px; padding-top: 20px;
+  border-top: var(--border-hair) solid var(--color-theme-border-01-5);
+  font-size: 12px; color: var(--color-theme-text-tertiary);
+}
+
+@media (max-width: 760px) {
+  .footer__grid { grid-template-columns: 1fr 1fr; }
+  .type-row { grid-template-columns: 1fr; gap: 8px; }
+  .nav__btn.hide-sm { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ================= 导航 ================= -->
+<nav class="nav">
+  <a class="nav__logo" href="#">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2L2 7.5v9L12 22l10-5.5v-9L12 2z" stroke="#26251e" stroke-width="1.6"/>
+      <path d="M12 22V12M2 7.5l10 4.5 10-4.5" stroke="#26251e" stroke-width="1.6"/>
+    </svg>
+    Cursor
+  </a>
+  <div class="nav__item">
+    <button class="nav__btn">产品 <span class="nav__caret">▾</span></button>
+    <div class="flyout">
+      <div class="flyout__label">智能体</div>
+      <a href="#">Tab</a>
+      <a href="#">Agent</a>
+      <a href="#">Bug Bot</a>
+      <div class="flyout__label">平台</div>
+      <a href="#">CLI</a>
+      <a href="#">移动端 <span class="ext">↗</span></a>
+    </div>
+  </div>
+  <div class="nav__item">
+    <button class="nav__btn">定价</button>
+  </div>
+  <div class="nav__item">
+    <button class="nav__btn">资源 <span class="nav__caret">▾</span></button>
+    <div class="flyout">
+      <a href="#">更新日志</a>
+      <a href="#">文档</a>
+      <a href="#">社区</a>
+      <a href="#">论坛 <span class="ext">↗</span></a>
+    </div>
+  </div>
+  <div class="nav__spacer"></div>
+  <a class="btn btn--ghost btn--sm hide-sm" href="#">联系我们</a>
+  <a class="btn btn--primary btn--sm" href="#">下载 <span class="arrow">⤓</span></a>
+</nav>
+
+<!-- ================= Hero ================= -->
+<header class="hero container">
+  <div class="eyebrow">CURSOR UI KIT · 设计规范 v1.0</div>
+  <h1>基于 Cursor 官网提取的设计系统组件库。</h1>
+  <p>纸感底色、墨色文字、胶囊按钮、0.8px 细边框 —— 全部设计令牌均取自 cursor.com 的真实渲染值。</p>
+  <div class="code-pill">
+    <span>curl https://cursor-ui.dev/install | sh</span>
+    <button class="copy" onclick="copyCmd(this)">复制</button>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- ================= 色彩 ================= -->
+  <section class="section" id="colors">
+    <span class="section-label">01 · COLORS 色彩系统</span>
+    <h2>克制的纸感色板</h2>
+    <p class="section-desc">一切颜色由"墨色 #26251e"以不同透明度混合而成，唯一强调色是 Cursor 橙。这保证了页面高度统一、安静克制。</p>
+    <div class="swatches">
+      <div class="swatch"><div class="swatch__chip" style="background:#f7f7f4"></div><div class="swatch__meta"><div class="swatch__name">bg · 纸感底色</div><div class="swatch__value">#F7F7F4</div></div></div>
+      <div class="swatch"><div class="swatch__chip" style="background:#f2f1ed"></div><div class="swatch__meta"><div class="swatch__name">card · 卡片面</div><div class="swatch__value">#F2F1ED</div></div></div>
+      <div class="swatch"><div class="swatch__chip" style="background:#e6e5e0"></div><div class="swatch__meta"><div class="swatch__name">card-03 · 次级面</div><div class="swatch__value">#E6E5E0</div></div></div>
+      <div class="swatch"><div class="swatch__chip" style="background:#26251e"></div><div class="swatch__meta"><div class="swatch__name">ink · 墨色</div><div class="swatch__value">#26251E</div></div></div>
+      <div class="swatch"><div class="swatch__chip" style="background:#f54e00"></div><div class="swatch__meta"><div class="swatch__name">accent · 强调橙</div><div class="swatch__value">#F54E00</div></div></div>
+      <div class="swatch"><div class="swatch__chip" style="background:#2268ff"></div><div class="swatch__meta"><div class="swatch__name">tone-blue</div><div class="swatch__value">#2268FF</div></div></div>
+      <div class="swatch"><div class="swatch__chip" style="background:#019f52"></div><div class="swatch__meta"><div class="swatch__name">tone-green</div><div class="swatch__value">#019F52</div></div></div>
+      <div class="swatch"><div class="swatch__chip" style="background:#ec77bf"></div><div class="swatch__meta"><div class="swatch__name">tone-pink</div><div class="swatch__value">#EC77BF</div></div></div>
+      <div class="swatch"><div class="swatch__chip" style="background:#e05c7d"></div><div class="swatch__meta"><div class="swatch__name">tone-red</div><div class="swatch__value">#E05C7D</div></div></div>
+    </div>
+  </section>
+
+  <!-- ================= 字体 ================= -->
+  <section class="section" id="type">
+    <span class="section-label">02 · TYPOGRAPHY 字体排印</span>
+    <h2>400 字重的排印体系</h2>
+    <p class="section-desc">Cursor 的标志性做法：大标题也用 400 字重，靠负字距（-0.025em）和小字号制造层级，而不是加粗。</p>
+    <div class="type-specimen">
+      <div class="type-row">
+        <div class="type-row__meta">Display / 48px<br>ls -0.025em · w400</div>
+        <div class="type-sample ts-display">构建雄心勃勃的软件</div>
+      </div>
+      <div class="type-row">
+        <div class="type-row__meta">Heading 2 / 34px<br>ls -0.02em · w400</div>
+        <div class="type-sample ts-h2">智能协作界面</div>
+      </div>
+      <div class="type-row">
+        <div class="type-row__meta">Heading 3 / 20.6px<br>ls -0.005em · w400</div>
+        <div class="type-sample ts-h3">每天都深受团队信赖</div>
+      </div>
+      <div class="type-row">
+        <div class="type-row__meta">Body / 15px · w400</div>
+        <div class="type-sample ts-base">Cursor 是一款 AI 优先的代码编辑器，帮助你和团队更快速地构建软件。</div>
+      </div>
+      <div class="type-row">
+        <div class="type-row__meta">Label / 13.1px<br>ls +0.01em</div>
+        <div class="type-sample ts-label">小节标签 · 用于 eyebrow 与导航</div>
+      </div>
+      <div class="type-row">
+        <div class="type-row__meta">Mono / Berkeley Mono<br>13px</div>
+        <div class="type-sample ts-mono">const agent = await cursor.run(task)</div>
+      </div>
+      <div class="type-row">
+        <div class="type-row__meta">Serif / EB Garamond<br>斜体点缀</div>
+        <div class="type-sample ts-serif">The AI Code Editor</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 按钮 ================= -->
+  <section class="section" id="buttons">
+    <span class="section-label">03 · BUTTONS 按钮</span>
+    <h2>胶囊按钮 · 0.8px 细边框</h2>
+    <p class="section-desc">按钮全部为全圆角胶囊形，字重 400，边框极细（0.8px）。主按钮用墨色而非品牌橙，橙色只作强调。</p>
+    <div class="demo-panel">
+      <div class="demo-row">
+        <div class="demo-row__label">变体 VARIANTS</div>
+        <button class="btn btn--primary">主要操作</button>
+        <button class="btn btn--secondary">次要操作</button>
+        <button class="btn btn--ghost">幽灵按钮</button>
+        <button class="btn btn--accent">强调按钮</button>
+      </div>
+      <div class="demo-row">
+        <div class="demo-row__label">尺寸 SIZES</div>
+        <button class="btn btn--primary btn--sm">小型按钮</button>
+        <button class="btn btn--primary">常规尺寸</button>
+      </div>
+      <div class="demo-row">
+        <div class="demo-row__label">带箭头与禁用 WITH ARROW / DISABLED</div>
+        <a class="btn btn--primary" href="#">开始使用 <span class="arrow">→</span></a>
+        <a class="btn btn--secondary" href="#">申请演示 <span class="arrow">→</span></a>
+        <button class="btn btn--primary" disabled>禁用状态</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 徽章 ================= -->
+  <section class="section" id="badges">
+    <span class="section-label">04 · BADGES 徽章与状态</span>
+    <h2>细边框状态徽章</h2>
+    <p class="section-desc">语义色只出现在徽章、状态点等小面积元素上，保持整体画面的安静。</p>
+    <div class="demo-panel">
+      <div class="demo-row">
+        <span class="badge">默认徽章</span>
+        <span class="badge badge--accent"><span class="dot"></span>Beta 功能</span>
+        <span class="badge badge--green"><span class="dot"></span>运行中</span>
+        <span class="badge badge--red"><span class="dot"></span>构建失败</span>
+        <span class="badge badge--blue">v2.0 发布</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 卡片 ================= -->
+  <section class="section" id="cards">
+    <span class="section-label">05 · CARDS 卡片</span>
+    <h2>4px 小圆角卡片</h2>
+    <p class="section-desc">卡片圆角只有 4px（与胶囊按钮形成对比），背景比页面深一档，悬浮时边框加深并轻微上浮。</p>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card__icon">⌘</div>
+        <h3>智能补全</h3>
+        <p>预测你的下一次编辑，跨多行智能建议。</p>
+        <a class="card__link" href="#">了解更多 <span>→</span></a>
+      </div>
+      <div class="card">
+        <div class="card__icon">⟳</div>
+        <h3>代码库理解</h3>
+        <p>对整个项目建立索引，回答基于全局上下文。</p>
+        <a class="card__link" href="#">了解更多 <span>→</span></a>
+      </div>
+      <div class="card">
+        <div class="card__icon">✦</div>
+        <h3>Agent 模式</h3>
+        <p>自主完成多步骤任务，端到端编写与运行代码。</p>
+        <a class="card__link" href="#">了解更多 <span>→</span></a>
+      </div>
+      <div class="card">
+        <div class="card__icon">◱</div>
+        <h3>云端智能体</h3>
+        <p>把任务派发到远端，并行处理，异步取回结果。</p>
+        <a class="card__link" href="#">了解更多 <span>→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 分段控制 + 标签页 ================= -->
+  <section class="section" id="controls">
+    <span class="section-label">06 · CONTROLS 分段控制与标签页</span>
+    <h2>分段控制器 · 下划线标签页</h2>
+    <p class="section-desc">分段控制器来自定价页的「按月/按年」切换：胶囊容器内嵌一个滑动的次级面滑块。</p>
+    <div class="demo-panel">
+      <div class="demo-row">
+        <div class="segmented" id="segDemo">
+          <div class="thumb"></div>
+          <button class="active">按月</button>
+          <button>按年</button>
+          <button>团队</button>
+        </div>
+      </div>
+      <div class="demo-row">
+        <div class="tabs" style="width:100%">
+          <button class="active">概览</button>
+          <button>快速开始</button>
+          <button>API 参考</button>
+          <button>示例</button>
+        </div>
+      </div>
+      <div class="demo-row">
+        <label class="switch-row">
+          <span class="switch"><input type="checkbox" checked><span class="track"></span></span>
+          启用 Agent 自动运行
+        </label>
+        <label class="switch-row">
+          <span class="switch"><input type="checkbox"><span class="track"></span></span>
+          隐私模式
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 表单 ================= -->
+  <section class="section" id="forms">
+    <span class="section-label">07 · FORMS 表单输入</span>
+    <h2>输入框 · 搜索栏</h2>
+    <p class="section-desc">输入框 4px 圆角 + 0.8px 边框，聚焦时使用强调橙描边；搜索栏为胶囊形并带快捷键提示。</p>
+    <div class="demo-panel">
+      <div class="demo-row">
+        <div class="input-wrap">
+          <label>邮箱地址</label>
+          <input class="input" type="email" placeholder="you@example.com">
+          <span class="help-text">用于接收产品更新</span>
+        </div>
+        <div class="input-wrap">
+          <label>工作区名称（错误态）</label>
+          <input class="input input--error" value="空格 不允许">
+          <span class="help-text error">名称不能包含空格</span>
+        </div>
+        <div class="input-wrap">
+          <label>计划</label>
+          <select class="select">
+            <option>Hobby · 免费</option>
+            <option>Pro · $20/月</option>
+            <option>Teams · $40/用户/月</option>
+          </select>
+        </div>
+      </div>
+      <div class="demo-row">
+        <div class="searchbar">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          搜索文档，或直接提问…
+          <kbd>⌘K</kbd>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 代码与终端 ================= -->
+  <section class="section" id="code">
+    <span class="section-label">08 · CODE 代码与终端</span>
+    <h2>胶囊代码条 · 反色终端</h2>
+    <p class="section-desc">安装命令采用胶囊形代码条；终端块是页面上唯一的大面积深色元素，形成强烈的视觉锚点。</p>
+    <div class="demo-panel" style="display:grid; gap:20px; justify-items:start">
+      <div class="code-pill">
+        <span>npm install -g @cursor/agent</span>
+        <button class="copy" onclick="copyCmd(this)">复制</button>
+      </div>
+      <div class="terminal" style="width:100%">
+        <div><span class="t-dim">$</span> cursor agent run "修复登录页的回归"</div>
+        <div><span class="t-dim">✓</span> <span class="t-green">已索引</span> 1,284 个文件 <span class="t-dim">(2.3s)</span></div>
+        <div><span class="t-orange">●</span> 正在编辑 src/pages/login.tsx …</div>
+        <div><span class="t-dim">✓</span> 测试通过 <span class="t-green">42/42</span></div>
+        <div><span class="t-dim">$</span> <span class="t-cursor"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 表格 ================= -->
+  <section class="section" id="table">
+    <span class="section-label">09 · TABLE 数据表格</span>
+    <h2>细线分隔表格</h2>
+    <p class="section-desc">表头用三级灰、正字距小号字；行以 0.8px 细线分隔，悬浮时整行高亮。</p>
+    <div class="demo-panel" style="padding:8px 0">
+      <table class="table">
+        <thead>
+          <tr><th>模型</th><th>上下文</th><th>输入价格</th><th>状态</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">composer-1</td><td>128K</td><td class="mono">$0.80 / M</td><td><span class="badge badge--green"><span class="dot"></span>可用</span></td></tr>
+          <tr><td class="mono">claude-4.5-sonnet</td><td>200K</td><td class="mono">$3.00 / M</td><td><span class="badge badge--green"><span class="dot"></span>可用</span></td></tr>
+          <tr><td class="mono">gpt-5-codex</td><td>400K</td><td class="mono">$1.25 / M</td><td><span class="badge badge--blue">预览</span></td></tr>
+          <tr><td class="mono">gemini-3-pro</td><td>1M</td><td class="mono">$1.25 / M</td><td><span class="badge">排队中</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= 手风琴 ================= -->
+  <section class="section" id="accordion">
+    <span class="section-label">10 · ACCORDION 手风琴</span>
+    <h2>常见疑问解答</h2>
+    <p class="section-desc">与定价页 FAQ 一致：细分隔线 + 右侧 ↓/↑ 箭头，展开动画使用 max-height 过渡。</p>
+    <div class="accordion">
+      <div class="accordion__item open">
+        <button class="accordion__head">哪种计划适合我？<span class="accordion__caret">↓</span></button>
+        <div class="accordion__body" style="max-height:120px"><div class="accordion__body-inner">个人项目从 Hobby 开始即可；需要无限次补全和更多模型额度时升级 Pro；团队协作与集中计费选择 Teams。</div></div>
+      </div>
+      <div class="accordion__item">
+        <button class="accordion__head">我的代码会被用来训练模型吗？<span class="accordion__caret">↓</span></button>
+        <div class="accordion__body"><div class="accordion__body-inner">不会。开启隐私模式后，你的代码永远不会被存储或用于任何模型训练。</div></div>
+      </div>
+      <div class="accordion__item">
+        <button class="accordion__head">支持哪些编辑器与平台？<span class="accordion__caret">↓</span></button>
+        <div class="accordion__body"><div class="accordion__body-inner">提供独立编辑器（macOS / Windows / Linux），核心能力也可通过 CLI 与 IDE 插件使用。</div></div>
+      </div>
+      <div class="accordion__item">
+        <button class="accordion__head">如何计费？<span class="accordion__caret">↓</span></button>
+        <div class="accordion__body"><div class="accordion__body-inner">按月或按年订阅，可随时取消。超出包含额度后按用量计费，价格透明。</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 通知 ================= -->
+  <section class="section" id="toast">
+    <span class="section-label">11 · TOAST 通知</span>
+    <h2>轻量浮动通知</h2>
+    <p class="section-desc">卡片面板 + flyout 阴影，左侧为语义色状态图标。点击按钮可触发一个真实的通知。</p>
+    <div class="demo-panel demo-row">
+      <button class="btn btn--primary btn--sm" onclick="showToast('success')">触发成功通知</button>
+      <button class="btn btn--secondary btn--sm" onclick="showToast('error')">触发错误通知</button>
+      <div class="toast toast--success" id="toastDemo" style="display:none">
+        <span class="icon">✓</span>
+        <span id="toastMsg">更改已保存</span>
+        <button class="toast__close" onclick="hideToast()">✕</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ================= 页脚 ================= -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer__grid">
+      <div class="footer__brand">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L2 7.5v9L12 22l10-5.5v-9L12 2z" stroke="#26251e" stroke-width="1.6"/>
+          <path d="M12 22V12M2 7.5l10 4.5 10-4.5" stroke="#26251e" stroke-width="1.6"/>
+        </svg>
+        <p>基于 cursor.com 视觉语言还原的设计组件库，仅供学习参考。</p>
+      </div>
+      <div>
+        <h4>产品</h4>
+        <ul><li><a href="#">智能体</a></li><li><a href="#">Tab</a></li><li><a href="#">CLI</a></li><li><a href="#">定价</a></li></ul>
+      </div>
+      <div>
+        <h4>资源</h4>
+        <ul><li><a href="#">文档</a></li><li><a href="#">更新日志</a></li><li><a href="#">社区</a></li><li><a href="#">论坛 ↗</a></li></ul>
+      </div>
+      <div>
+        <h4>公司</h4>
+        <ul><li><a href="#">关于</a></li><li><a href="#">博客</a></li><li><a href="#">招聘</a></li><li><a href="#">联系销售</a></li></ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>© 2026 Cursor UI Kit · 仅供学习</span>
+      <span class="mono" style="font-family:var(--font-mono)">bg #f7f7f4 · ink #26251e · accent #f54e00</span>
+    </div>
+  </div>
+</footer>
+
+<!-- 浮动 toast 容器 -->
+<div id="toastHost" style="position:fixed; right:24px; bottom:24px; z-index:200; display:grid; gap:10px;"></div>
+
+<script>
+/* 分段控制器滑块 */
+document.querySelectorAll('.segmented').forEach(seg => {
+  const thumb = seg.querySelector('.thumb');
+  const btns = [...seg.querySelectorAll('button')];
+  function move(btn) {
+    thumb.style.left = btn.offsetLeft + 'px';
+    thumb.style.width = btn.offsetWidth + 'px';
+  }
+  btns.forEach(b => b.addEventListener('click', () => {
+    btns.forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    move(b);
+  }));
+  requestAnimationFrame(() => move(seg.querySelector('button.active')));
+  window.addEventListener('resize', () => move(seg.querySelector('button.active')));
+});
+
+/* 标签页 */
+document.querySelectorAll('.tabs').forEach(tabs => {
+  tabs.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+    tabs.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+  }));
+});
+
+/* 手风琴 */
+document.querySelectorAll('.accordion__item').forEach(item => {
+  const head = item.querySelector('.accordion__head');
+  const body = item.querySelector('.accordion__body');
+  head.addEventListener('click', () => {
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.accordion__item').forEach(i => {
+      i.classList.remove('open');
+      i.querySelector('.accordion__body').style.maxHeight = '0';
+    });
+    if (!isOpen) {
+      item.classList.add('open');
+      body.style.maxHeight = body.scrollHeight + 'px';
+    }
+  });
+});
+
+/* 复制命令 */
+function copyCmd(btn) {
+  const text = btn.parentElement.querySelector('span').textContent;
+  navigator.clipboard?.writeText(text);
+  btn.textContent = '已复制 ✓';
+  setTimeout(() => (btn.textContent = '复制'), 1600);
+}
+
+/* Toast */
+function showToast(type) {
+  const host = document.getElementById('toastHost');
+  const t = document.createElement('div');
+  t.className = 'toast toast--' + type;
+  t.innerHTML = type === 'success'
+    ? '<span class="icon">✓</span><span>更改已保存</span><button class="toast__close">✕</button>'
+    : '<span class="icon">!</span><span>构建失败：无法解析依赖</span><button class="toast__close">✕</button>';
+  t.querySelector('.toast__close').onclick = () => t.remove();
+  host.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+</script>
+</body>
+</html>
